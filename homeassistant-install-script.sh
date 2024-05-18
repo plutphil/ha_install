@@ -23,6 +23,7 @@ latest_version=$(echo "$release_page" | grep -oP 'href="/home-assistant/os-agent
 
 # Detect the system architecture
 arch=$(uname -m)
+
 case $arch in
   x86_64)
     arch="x86_64"
