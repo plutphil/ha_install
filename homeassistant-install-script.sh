@@ -1,28 +1,68 @@
-sudo apt update && sudo apt upgrade -y -qq
+#!/bin/bash
+sudo apt install apparmor cifs-utils curl dbus jq libglib2.0-bin lsb-release network-manager nfs-common systemd-journal-remote systemd-resolved udisks2 wget uidmap -y
+
+if ! command -v docker &> /dev/null
+then
+    echo "docker could not be found"
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh
+else
+    echo "docker is installed"
+fi
+
+dockerd-rootless-setuptool.sh install
+export PATH=/usr/bin:$PATH
+export DOCKER_HOST=unix:///run/user/1000/docker.sock
 
 
-curl -fsSL get.docker.com | sh
 
-#curl -fsSL https://get.docker.com -o get-docker.sh
-#sh get-docker.sh
+# Get the latest release page
+release_url="https://github.com/home-assistant/os-agent/releases/latest"
+release_page=$(curl -sL $release_url)
 
-apt-get install -y uidmap -qq
+# Extract the latest version number from the release page
+latest_version=$(echo "$release_page" | grep -oP 'href="/home-assistant/os-agent/releases/tag/\K[^"]+')
 
-sudo dockerd-rootless-setuptool.sh install
+# Detect the system architecture
+arch=$(uname -m)
+case $arch in
+  x86_64)
+    arch="x86_64"
+    ;;
+  i686 | i386)
+    arch="386"
+    ;;
+  aarch64)
+    arch="arm64"
+    ;;
+  armv5*)
+    arch="armv5"
+    ;;
+  armv6*)
+    arch="armv6"
+    ;;
+  armv7*)
+    arch="armv7"
+    ;;
+  *)
+    echo "Unsupported architecture: $arch"
+    exit 1
+    ;;
+esac
 
-sudo groupadd docker
-sudo usermod -aG docker ubuntu
+# Construct the download URL based on architecture
+base_url="https://github.com/home-assistant/os-agent/releases/download/$latest_version"
+#         https://github.com/home-assistant/os-agent/releases/download/1.6.0/os-agent_1.6.0_linux_x86_64.deb
+file_url="$base_url/os-agent_${latest_version}_linux_${arch}.deb"
+echo $lates_version
+echo $file_url
+filepath="os-agent_${latest_version}_linux_${arch}.deb"
 
-docker volume create portainer_data
-docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:2.19.1
+# Download the file
+wget $file_url
+sudo dpkg -i $filepath
+echo "Downloaded $file_url"
 
-sudo apt-get install jq wget curl udisks2 libglib2.0-bin network-manager dbus -y -qq
 
-wget https://github.com/home-assistant/os-agent/releases/download/1.6.0/os-agent_1.6.0_linux_aarch64.deb
-sudo dpkg -i os-agent_1.3.0_linux_aarch64.deb
-
-wget https://github.com/home-assistant/supervised-installer/releases/download/1.5.0/homeassistant-supervised.deb
-sudo dpkg -i homeassistant-supervised.deb
-
-#important for unsupported systems
-ha jobs options --ignore-conditions healthy
+wget -O homeassistant-supervised.deb https://github.com/home-assistant/supervised-installer/releases/latest/download/homeassistant-supervised.deb
+sudo apt install ./homeassistant-supervised.deb
