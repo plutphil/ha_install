@@ -1,8 +1,8 @@
 #!/bin/bash
-sudo apt install apparmor cifs-utils curl dbus jq libglib2.0-bin lsb-release network-manager nfs-common systemd-journal-remote systemd-resolved udisks2 wget uidmap -y
 
-if ! command -v docker &> /dev/null
-then
+sudo apt update
+sudo apt install -y apparmor cifs-utils curl dbus jq libglib2.0-bin lsb-release network-manager nfs-common systemd-journal-remote systemd-resolved udisks2 wget uidmap
+if ![ command -v docker &> /dev/null]; then
     echo "docker could not be found"
     curl -fsSL https://get.docker.com -o get-docker.sh
     sh get-docker.sh
@@ -13,8 +13,6 @@ fi
 dockerd-rootless-setuptool.sh install
 export PATH=/usr/bin:$PATH
 export DOCKER_HOST=unix:///run/user/1000/docker.sock
-
-
 
 # Get the latest release page
 release_url="https://github.com/home-assistant/os-agent/releases/latest"
