@@ -4,5 +4,4 @@
 - Tested on Debian amd64.
 
 # Notice
-This script will install an __unsupported version___ of Homeassistant. This means that is not the intended way by the developers of installing Homeassistant.
-You are better off to go installing Homeassistant OS.
+This script installs an __unsupported version__ of Homeassistant. This means that this is not the way the developers intended to install Homeassistant. You are better off installing Homeassistant OS.
